@@ -553,7 +553,9 @@ func TestCloseDeadline(t *testing.T) {
 	}
 
 	close(gate)
-	receive(t, running, "running task")
+	if err := receive(t, running, "running task"); err != nil {
+		t.Fatalf("running task returned %v, want nil", err)
+	}
 	if err := q.Close(context.Background()); err != nil {
 		t.Fatalf("Close after the task finished: %v", err)
 	}
@@ -580,8 +582,12 @@ func TestStats(t *testing.T) {
 	}
 
 	close(gate)
-	receive(t, first, "first task")
-	receive(t, second, "second task")
+	if err := receive(t, first, "first task"); err != nil {
+		t.Fatalf("first task returned %v, want nil", err)
+	}
+	if err := receive(t, second, "second task"); err != nil {
+		t.Fatalf("second task returned %v, want nil", err)
+	}
 	if s := q.Stats(); s != (Stats{}) {
 		t.Fatalf("Stats after drain = %+v, want zero", s)
 	}
