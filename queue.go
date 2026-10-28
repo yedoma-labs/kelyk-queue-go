@@ -250,7 +250,8 @@ func (q *Queue) execute(j *job) {
 
 // finish records the task result, releases the key lock and the concurrency slot, and starts
 // the next waiting work. If the caller has already received a queue-level error, the result is
-// dropped.
+// dropped. If the caller's context has ended by now, the caller gets ErrAborted, even when the
+// task returned a value, because the caller has given up.
 func (q *Queue) finish(j *job, err error) {
 	q.mu.Lock()
 	defer q.mu.Unlock()
@@ -261,7 +262,11 @@ func (q *Queue) finish(j *job, err error) {
 	}
 	if !j.settled {
 		j.settled = true
-		j.taskErr = err
+		if cause := j.callerCtx.Err(); cause != nil {
+			j.queueErr = fmt.Errorf("%w: %w", ErrAborted, cause)
+		} else {
+			j.taskErr = err
+		}
 		close(j.done)
 	}
 
