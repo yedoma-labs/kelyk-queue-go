@@ -622,8 +622,12 @@ func TestKeyStateIsReleasedWhenIdle(t *testing.T) {
 			t.Fatalf("keyCount while busy = %d, want 1", n)
 		}
 		close(gate)
-		receive(t, first, "first task")
-		receive(t, second, "second task")
+		if err := receive(t, first, "first task"); err != nil {
+			t.Fatalf("first task returned %v, want nil", err)
+		}
+		if err := receive(t, second, "second task"); err != nil {
+			t.Fatalf("second task returned %v, want nil", err)
+		}
 		if n := q.keyCount(); n != 0 {
 			t.Fatalf("keyCount after drain = %d, want 0", n)
 		}
@@ -643,7 +647,9 @@ func TestKeyStateIsReleasedWhenIdle(t *testing.T) {
 		second := startAsync(q, abortCtx, "other", noop)
 		waitFor(t, "task queued", func() bool { return q.Stats().Pending == 1 })
 		cancel()
-		receive(t, second, "aborted task")
+		if err := receive(t, second, "aborted task"); !errors.Is(err, ErrAborted) {
+			t.Fatalf("aborted task returned %v, want ErrAborted", err)
+		}
 		if n := q.keyCount(); n != 1 {
 			t.Fatalf("keyCount = %d, want 1 (only the running key)", n)
 		}
