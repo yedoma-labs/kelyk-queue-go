@@ -1,4 +1,8 @@
 # kelyk-queue-go
+<picture>
+  <source media="(max-width: 640px)" srcset="https://raw.githubusercontent.com/yedoma-labs/assets/main/resized/banner-resized-mobile.png">
+  <img src="https://raw.githubusercontent.com/yedoma-labs/assets/main/resized/banner-resized.png" alt="Project Header">
+</picture>
 
 A keyed task queue for Go. Tasks with the same key run strictly in FIFO order and never overlap.
 Tasks with different keys run in parallel. Standard library only.
