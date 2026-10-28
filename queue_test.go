@@ -654,7 +654,9 @@ func TestKeyStateIsReleasedWhenIdle(t *testing.T) {
 			t.Fatalf("keyCount = %d, want 1 (only the running key)", n)
 		}
 		close(gate)
-		receive(t, first, "first task")
+		if err := receive(t, first, "first task"); err != nil {
+			t.Fatalf("first task returned %v, want nil", err)
+		}
 		if n := q.keyCount(); n != 0 {
 			t.Fatalf("keyCount after drain = %d, want 0", n)
 		}
@@ -691,9 +693,13 @@ func TestKeyStateIsReleasedWhenIdle(t *testing.T) {
 
 		closeErr := make(chan error, 1)
 		go func() { closeErr <- q.Close(ctx) }()
-		receive(t, queued, "queued task")
+		if err := receive(t, queued, "queued task"); !errors.Is(err, ErrClosed) {
+			t.Fatalf("queued task returned %v, want ErrClosed", err)
+		}
 		close(gate)
-		receive(t, first, "first task")
+		if err := receive(t, first, "first task"); err != nil {
+			t.Fatalf("first task returned %v, want nil", err)
+		}
 		if err := receive(t, closeErr, "Close"); err != nil {
 			t.Fatalf("Close: %v", err)
 		}
